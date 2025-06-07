@@ -83,15 +83,16 @@ else:
 
 # ──────────────────────────────────────────────────────────────────────────
 # Project‑local imports (after sys.path adjusted by package layout)
-from src.envs.mahjong_env import MahjongEnv            # noqa: E402
+from src.envs.ach_env_wrapper import TwoPlayerMahjongEnvACH  # noqa: E402
 from src.algorithms.ach_trainer import ACHTrainer      # noqa: E402
+from src.algorithms.networks import ACHNetwork         # noqa: E402
 
-env = MahjongEnv()
+env = TwoPlayerMahjongEnvACH()
 trainer = ACHTrainer(
     env=env,
+    network_class=ACHNetwork,
     device=args.device,
-    lr_actor=args.lr_actor,
-    lr_critic=args.lr_critic,
+    lr=args.lr_actor,
     entropy_coef=args.entropy_beta,
     eta=args.eta,
 )
@@ -143,8 +144,7 @@ while timesteps < args.total_steps:
         ckpt_path = CKPT_DIR / f"ach_{timesteps}.pt"
         torch.save({
             "network": trainer.network.state_dict(),
-            "optim_actor": trainer.optimizer_actor.state_dict(),
-            "optim_critic": getattr(trainer, "optimizer_critic", None),
+            "optimizer": trainer.optimizer.state_dict(),
             "timesteps": timesteps,
             "args": vars(args),
         }, ckpt_path)
