@@ -110,6 +110,16 @@ while timesteps < args.total_steps:
     timesteps += args.n_steps
 
     metrics = trainer.update_network(buffer)
+    
+    # Handle case where metrics is None
+    if metrics is None:
+        metrics = {
+            'actor_loss': 0.0,
+            'value_loss': 0.0,
+            'entropy': 0.0,
+            'mean_ratio': 1.0,
+            'avg_reward': 0.0
+        }
 
     # progress & timing
     elapsed = time.time() - start_time
