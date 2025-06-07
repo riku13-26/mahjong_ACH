@@ -105,7 +105,7 @@ class ACHTrainer:
         value_coef=0.5,
         entropy_coef=0.01,
         eta=1.0,  # Hedge温度パラメータ
-        logit_threshold=2.0,  # l_th
+        logit_threshold=6.0,  # l_th
         max_grad_norm=0.5,
         update_epochs=4,
         batch_size=64,
