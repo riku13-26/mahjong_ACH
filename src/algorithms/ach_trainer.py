@@ -313,6 +313,7 @@ class ACHTrainer:
                 self.optimizer.step()
                 
                 self.training_stats.append(stats)
+        return stats
     
     def train(self, total_timesteps=1000000, log_interval=10):
         """メイン訓練ループ"""
