@@ -313,7 +313,20 @@ class ACHTrainer:
                 self.optimizer.step()
                 
                 self.training_stats.append(stats)
-        return stats
+        
+        # 統計情報を返す
+        if self.training_stats:
+            latest_stats = self.training_stats[-1].copy()
+            latest_stats['avg_reward'] = np.mean(self.episode_rewards[-100:]) if self.episode_rewards else 0.0
+            return latest_stats
+        else:
+            return {
+                'actor_loss': 0.0,
+                'value_loss': 0.0,
+                'entropy': 0.0,
+                'mean_ratio': 1.0,
+                'avg_reward': 0.0
+            }
     
     def train(self, total_timesteps=1000000, log_interval=10):
         """メイン訓練ループ"""
