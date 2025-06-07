@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import time
 import torch
 import wandb
 
@@ -95,6 +96,8 @@ trainer = ACHTrainer(
     eta=args.eta,
 )
 
+start_time = time.time()
+
 # ──────────────────────────────────────────────────────────────────────────
 print("=== ACH training start ===")
 print(json.dumps(vars(args), indent=2))
@@ -107,18 +110,33 @@ while timesteps < args.total_steps:
 
     metrics = trainer.update_network(buffer)
 
+    # progress & timing
+    elapsed = time.time() - start_time
+    progress = timesteps / args.total_steps * 100
+    sps = timesteps / elapsed if elapsed > 0 else 0.0
+    eta_sec = (args.total_steps - timesteps) / sps if sps > 0 else float('inf')
+    eta_min = eta_sec / 60
+
     # ── logging ────────────────────────────────────
     if iteration % 2 == 0:
         log_line = (f"Iter {iteration:4d} | steps {timesteps:8d} | "
+                    f"{progress:5.1f}% | "
                     f"R̄ {metrics['avg_reward']:+.3f} | "
                     f"Lπ {metrics['actor_loss']:+.4f} | "
                     f"LV {metrics['value_loss']:+.4f} | "
                     f"H {metrics['entropy']:+.3f} | "
-                    f"ratio {metrics['mean_ratio']:.3f}")
+                    f"ratio {metrics['mean_ratio']:.3f} | "
+                    f"ETA {eta_min:6.1f}m") 
         print(log_line)
 
     if args.wandb:
-        wandb.log({"timesteps": timesteps, **metrics})
+        wandb.log({
+            "timesteps": timesteps,
+            "progress_%": progress,
+            "steps_per_sec": sps,
+            "ETA_min": eta_min,
+            **metrics
+        }, step=timesteps)
 
     # ── checkpoint ────────────────────────────────
     if timesteps % args.checkpoint_steps == 0 or timesteps >= args.total_steps:
